@@ -1,8 +1,8 @@
 Show a merged view of client folders in all the people's repos.
 
-Have 
-_scan/client1/job1/link:"dev1.client1.job1"
-dev1/clients/client1/job1/...
+Have the scan folder: _scan/client1/job1/link:"dev1.client1.job1"
+
+which links to the dev folder: dev1/clients/client1/job1/...
 
 
 There could potentially be multiple links in the job folder, if two devs had a project with the same name.

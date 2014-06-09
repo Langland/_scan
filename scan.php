@@ -1,5 +1,5 @@
 <?php
-
+date_default_timezone_set('Europe/London');
 $prefix = $argc > 1 ? $argv[1] : 'lld_';
 $clientsFolderName = $argc > 2 ? $argv[2] : 'clients';
 $prefixLen = strlen($prefix);
@@ -42,11 +42,11 @@ function addJob($client, $job) {
         $output[$client][$job] = array();
     }
 }
-function addDevJob($client, $dev, $job) {
+function addDevJob($client, $dev, $job, $stamp) {
     global $output;
     addJob($client, $job);
     if(!array_key_exists($dev, $output[$client][$job])){
-        $output[$client][$job][$dev] = 1;
+        $output[$client][$job][$dev] = $stamp;
     }
 }
 
@@ -75,14 +75,36 @@ foreach($toScan as $scanPath){
             case 1:
                 // job folder
                 $job = $baseName;
-                addDevJob($client, $dev, $job);
+                $stamp = date("YmdGis", $splFileInfo->getMTime());
+                addDevJob($client, $dev, $job, $stamp);
                 break;
         }
     }
 }
 
 // delete the _scan/clients folder
-// 
-// using the output array, create the folders as needed
+$scanClientsDir = $thisDir . '/clients';
+if(file_exists($scanClientsDir)){
+    system("rm -rf ".escapeshellarg($scanClientsDir));
+}
 
+// and (re)create it
+mkdir($scanClientsDir);
+
+// using the output array, create the folders as needed
+foreach($output as $client => $jobs){
+    $clientDir = $scanClientsDir . '/' . $client;
+    mkdir($clientDir);
+    foreach($jobs as $job => $devs){
+        $jobDir = $clientDir . '/' . $job;
+        mkdir($jobDir);
+        foreach($devs as $dev => $stamp) {
+            $devLink = $jobDir . '/' . $stamp . '-' . $dev;
+            if(!is_link($devLink)){
+                $target = $scanDir . '/' . $prefix . $dev . '/' . $clientsFolderName . '/' . $client . '/' . $job;
+                symlink($target, $devLink);
+            }
+        }
+    }
+}
 
